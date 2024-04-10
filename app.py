@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from flask import Flask, render_template, request
 import xgboost as xgb
 import pandas as pd
@@ -10,7 +11,7 @@ xgb_model.load_model('xgb_model.model')
 
 @app.route('/')
 def index():
-    return render_template('/root/flask/app/index.html')
+    return render_template('index.html')
 
 @app.route('/data', methods=['POST'])  # 변경된 엔드포인트
 def predict():
