@@ -55,6 +55,9 @@ def predict():
     else:
         prediction = "Disease로 예측됩니다."
 
+    # 전송된 데이터 콘솔에 출력
+    print("Received data:", request.form)
+
     return render_template('result.html', prediction=prediction)
 
 if __name__ == '__main__':
