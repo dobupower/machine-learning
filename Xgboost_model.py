@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
 # 데이터 불러오기
-excel_file = '/root/liver_disease_data.xlsx'
+excel_file = '/root/liver_disease_data.xlsx' // 파일위치 변경 필요
 df = pd.read_excel(excel_file, engine='openpyxl')
 # 성별을 0과 1로 변환
 df['Sex(성별)'] = df['Sex(성별)'].map({'Male': 0, 'Female': 1})
