@@ -7,9 +7,6 @@
 필요한 라이브러리 설치하기
 프로젝트를 실행하기 전에, 다음의 명령어를 통해 필요한 라이브러리를 설치해 주세요:
 
-bash
-
-
 pip3 install xgboost pandas PyQt5
 
 사용 방법
@@ -24,8 +21,6 @@ python liver_disease.py
 
 필요한 라이브러리 설치하기
 프로젝트를 실행하기 전에, 다음의 명령어를 통해 필요한 라이브러리를 설치해 주세요:
-
-bash
 
 pip3 install xgboost pandas PyQt5
 
@@ -42,14 +37,8 @@ This project is based on Python and requires libraries such as XGBoost, Pandas, 
 Installing Required Libraries
 Before running the project, please install the necessary libraries using the following command:
 
-bash
-
-
 pip3 install xgboost pandas PyQt5
 Usage
 To run the project, use the following command:
-
-bash
-
 
 python liver_disease.py
