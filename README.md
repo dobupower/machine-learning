@@ -38,6 +38,7 @@ Installing Required Libraries
 Before running the project, please install the necessary libraries using the following command:
 
 pip3 install xgboost pandas PyQt5
+
 Usage
 To run the project, use the following command:
 
