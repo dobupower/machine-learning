@@ -1,41 +1,119 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QLineEdit, QPushButton
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QLineEdit, QPushButton, QVBoxLayout, QDialog, QMessageBox, QWidget, QFormLayout
+from PyQt5.QtGui import QPixmap
+import xgboost as xgb
+import pandas as pd
+
+class PredictionDialog(QDialog):
+    def __init__(self, parent=None, prediction_result=None):
+        super().__init__(parent)
+        
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+        
+        if prediction_result <= 0.5:
+            label = QLabel(f"정상입니다. 정상일 확률: {100*(1 - prediction_result):.3f}%")
+            layout.addWidget(label)
+            image_label = QLabel()
+            pixmap = QPixmap('liver_good.png')
+            image_label.setPixmap(pixmap)
+            layout.addWidget(image_label)
+        else:
+            label = QLabel(f"간질환이 의심됩니다. 간질환 확률: {100*prediction_result:.3f}%")
+            layout.addWidget(label)
+            image_label = QLabel()
+            pixmap = QPixmap('liver_sick.png')
+            image_label.setPixmap(pixmap)
+            layout.addWidget(image_label)
+
 
 class InputWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
         self.setWindowTitle("Input Form")
+        self.setGeometry(100, 100, 500, 550)
 
-        self.category_label = QLabel("Category:", self)
-        self.category_label.move(20, 20)
-        self.category_input = QLineEdit(self)
-        self.category_input.move(150, 20)
+        self.init_ui()
+        self.load_model()
 
-        self.age_label = QLabel("Age:", self)
-        self.age_label.move(20, 50)
-        self.age_input = QLineEdit(self)
-        self.age_input.move(150, 50)
+    def init_ui(self):
+        layout = QVBoxLayout()
+        self.central_widget = QWidget()
+        self.central_widget.setLayout(layout)
+        self.setCentralWidget(self.central_widget)
 
-        self.sex_label = QLabel("Sex:", self)
-        self.sex_label.move(20, 80)
-        self.sex_input = QLineEdit(self)
-        self.sex_input.move(150, 80)
+        form_layout = QFormLayout()
 
-        self.submit_button = QPushButton("Submit", self)
-        self.submit_button.move(150, 120)
+        self.input_widgets = {}
+
+        # Define input fields
+        fields = [
+            ("Age (나이):", "age"),
+            ("Sex (남성0/여성1):", "sex"),
+            ("ALB (알부민수치):", "alb"),
+            ("ALP (알칼리인산화효소):", "alp"),
+            ("ALT (알라닌아미노전이효소):", "alt"),
+            ("AST (아스파르테이트아미노전이효소):", "ast"),
+            ("BIL (빌리루빈):", "bil"),
+            ("CHE (콜린에스터아제):", "che"),
+            ("CHOL (롤레스테롤):", "chol"),
+            ("CREA (크레아티닌):", "crea"),
+            ("GGT (감마-글루타밀전달효소):", "ggt"),
+            ("PROT (단백질수치):", "prot")
+        ]
+
+        for label_text, key in fields:
+            label = QLabel(label_text)
+            line_edit = QLineEdit()
+            form_layout.addRow(label, line_edit)
+            self.input_widgets[key] = line_edit
+
+        layout.addLayout(form_layout)
+
+        # Submit Button
+        self.submit_button = QPushButton("Submit")
+        layout.addWidget(self.submit_button)
         self.submit_button.clicked.connect(self.get_input_values)
+    
+        # Image Label
+        self.pixmap = QPixmap('liver.jpg')
+        self.image_label = QLabel()
+        self.image_label.setPixmap(self.pixmap)
+        layout.addWidget(self.image_label)
 
-        self.setGeometry(100, 100, 300, 170)
+    def load_model(self):
+        try:
+            self.model = xgb.Booster()
+            self.model.load_model('xgb_model.model')
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"모델을 로드하는 도중 오류가 발생했습니다: {e}")
+            sys.exit(1)
 
     def get_input_values(self):
-        category = self.category_input.text()
-        age = self.age_input.text()
-        sex = self.sex_input.text()
+        try:
+        # Retrieve input values
+            data = {}
+            for key, widget in self.input_widgets.items():
+                input_text = widget.text().strip()
+                if not input_text:
+                    QMessageBox.critical(self, "Input Error", "모든 입력값은 필수입니다.")
+                    return
+                if not input_text.replace('.', '', 1).isdigit():  # 숫자 또는 소수점으로만 구성된 문자열인지 확인
+                    QMessageBox.critical(self, "Input Error", f"{key} 입력값은 숫자여야 합니다.")
+                    return
+                data[key.upper()] = [float(input_text)]
 
-        print("Category:", category)
-        print("Age:", age)
-        print("Sex:", sex)
+            # Make prediction
+            prediction = self.model.predict(xgb.DMatrix(pd.DataFrame(data)))[0]
+
+            # Show prediction result dialog
+            dialog = PredictionDialog(prediction_result=prediction)
+            dialog.exec()
+        except ValueError:
+            QMessageBox.critical(self, "Input Error", "입력값은 숫자여야 합니다.")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"예상치 못한 오류가 발생했습니다: {e}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
